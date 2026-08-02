@@ -14,7 +14,7 @@ echo -e "${CYAN}==> Adding nandu-repo to Termux APT sources...${RESET}"
 
 mkdir -p "$PREFIX/etc/apt/sources.list.d"
 cat << 'EOF' > "$PREFIX/etc/apt/sources.list.d/nandu-repo.list"
-deb [trusted=yes] https://raw.githubusercontent.com/bauaasoni37-cpu/Nandu-repo/main/repo ./
+deb [trusted=yes] https://bauaasoni37-cpu.github.io/Nandu-repo/repo ./
 EOF
 
 echo -e "${CYAN}==> Updating package lists...${RESET}"
