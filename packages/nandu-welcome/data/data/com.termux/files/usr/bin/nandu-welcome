@@ -1,0 +1,7 @@
+#!/data/data/com.termux/files/usr/bin/bash
+echo ""
+echo "   =================================================="
+echo "       Nandu welcome! This is your personal repo!"
+echo "       (nandu-repo) — demo package installed via pkg"
+echo "   =================================================="
+echo ""

@@ -1,0 +1,10 @@
+Package: nandu-welcome
+Version: 1.0.0
+Architecture: all
+Maintainer: Nandu <nandu@nandu-repo>
+Installed-Size: 4
+Section: misc
+Priority: optional
+Homepage: https://github.com/bauaasoni37-cpu/nandu-repo
+Description: Nandu personal repo welcome demo package.
+ Prints a personal welcome message when 'nandu-welcome' is run.

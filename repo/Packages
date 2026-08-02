@@ -1,0 +1,15 @@
+Package: nandu-welcome
+Version: 1.0.0
+Architecture: all
+Maintainer: Nandu <nandu@nandu-repo>
+Installed-Size: 4
+Section: misc
+Priority: optional
+Homepage: https://github.com/bauaasoni37-cpu/nandu-repo
+Description: Nandu personal repo welcome demo package.
+Filename: ./nandu-welcome_1.0.0_all.deb
+Size: 1120
+MD5sum: 630c5336f83e7ec57b1937235ee0025f
+SHA1: 4986b841ce98e636102c3b7469643b77120d83f6
+SHA256: 5e59b8301fcb7401b0c085f3acda6c2dcc3603d139998aa17e4c8db41f68787a
+
