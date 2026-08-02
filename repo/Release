@@ -2,13 +2,13 @@ Origin: nandu-repo
 Label: Nandu Personal Repo
 Suite: stable
 Codename: stable
-Date: Sun, 02 Aug 2026 14:31:12 UTC
+Date: Sun, 02 Aug 2026 16:27:10 UTC
 Architectures: all aarch64
 Components: main
 Description: Nandu's personal Termux APT repository.
 MD5Sum:
- 0dbb3ccfe062fea5c7bbe0d404a3b50f 1029 Packages
- 474985399e5771ea4d82a46f94eefea7 575 Packages.gz
+ e9fdb61d451803cfa624b94ebd4533fb 1029 Packages
+ 671aa7a60831adabfa572e5a8bd5fc8e 575 Packages.gz
 SHA256:
- b5891b85df5c635f542039bed7583474c7c5c6e91e05a123b1b16836619e96c5 1029 Packages
- 5bf3ab6653e2a8034ef79f1ac91e1b5c1f287ca869bf8145832d9e049d0f2b53 575 Packages.gz
+ ede87f42c326fff7b3a5b8ca056de69e4e08aad8edc058f6cab43f6bde5ca609 1029 Packages
+ 0e00094d2fd14685ef7884ded7497cfae646c5e331b40535a39c9e7cdea78fab 575 Packages.gz

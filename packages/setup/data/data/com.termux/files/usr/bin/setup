@@ -35,11 +35,26 @@ fi
 
 # ---------- 2. Ubuntu container --------------------------------------------
 echo -e "${CYAN}[2/5] Ensuring Ubuntu container ...${RESET}"
-if proot-distro list 2>&1 | grep -q "ubuntu"; then
+
+# Reliable check: proot-distro's data dir (documented location) plus a strict
+# parse of `proot-distro list`. Naively grepping "ubuntu" is wrong — when NO
+# container is installed, the "Install one with: proot-distro install ubuntu"
+# hint also contains "ubuntu", which caused the install to be wrongly skipped.
+ubuntu_installed() {
+    [ -d "$PREFIX/var/lib/proot-distro/containers/ubuntu" ] && return 0
+    proot-distro list 2>/dev/null | grep -qE '^\s*\*\s+ubuntu(\s|$)' && return 0
+    return 1
+}
+
+if ubuntu_installed; then
     echo -e "${GREEN}    ✓ Ubuntu already installed. Skipping.${RESET}"
 else
     echo -e "${YELLOW}    Installing Ubuntu (proot-distro install ubuntu)...${RESET}"
-    proot-distro install ubuntu
+    if ! proot-distro install ubuntu; then
+        echo -e "${RED}    ✗ Ubuntu install failed. Re-run 'setup' to retry.${RESET}"
+        exit 1
+    fi
+    echo -e "${GREEN}    ✓ Ubuntu installed.${RESET}"
 fi
 
 # ---------- 3. Android SDK & Flutter from GitHub Releases ------------------
@@ -59,14 +74,22 @@ download() {
     fi
     rm -f "$f"
     echo -e "${YELLOW}    Downloading $base ...${RESET}"
-    curl -fL -C - --retry 5 --retry-delay 3 -o "$f" "$url"
+    if ! curl -fL -C - --retry 5 --retry-delay 3 -o "$f" "$url"; then
+        echo -e "${RED}    Resume failed, downloading from scratch ...${RESET}"
+        rm -f "$f"
+        curl -fL --retry 5 --retry-delay 3 -o "$f" "$url"
+    fi
     if ! gzip -t "$f" 2>/dev/null; then
         echo -e "${RED}    Download corrupted. Retrying from scratch ...${RESET}"
         rm -f "$f"
         curl -fL --retry 5 --retry-delay 3 -o "$f" "$url"
     fi
-    gzip -t "$f" 2>/dev/null && echo -e "${GREEN}    ✓ $base downloaded OK.${RESET}" \
-        || { rm -f "$f"; echo -e "${RED}    ✗ $base download failed. Re-run 'setup' to retry.${RESET}"; return 1; }
+    if gzip -t "$f" 2>/dev/null; then
+        echo -e "${GREEN}    ✓ $base downloaded OK.${RESET}"
+    else
+        rm -f "$f"
+        echo -e "${RED}    ✗ $base download failed. Re-run 'setup' to retry.${RESET}"
+    fi
 }
 
 if sdk_missing /opt/android-sdk; then

@@ -60,7 +60,7 @@ Nandu-repo/
 ├── debs/                          # Built .deb archives
 └── repo/                          # Ye folder GitHub pe push hota hai
     ├── Packages / Packages.gz / Release
-    ├── setup_1.1.0_all.deb
+    ├── setup_1.1.1_all.deb
     └── nandu-welcome_1.0.0_all.deb
 ```
 
