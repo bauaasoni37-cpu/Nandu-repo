@@ -9,7 +9,23 @@ Homepage: https://github.com/bauaasoni37-cpu/Nandu-repo
 Description: Nandu personal repo welcome demo package.
 Filename: ./nandu-welcome_1.0.0_all.deb
 Size: 1120
-MD5sum: 01b7869818d0fcd1bf34ad2b88b3f3a4
-SHA1: d4f4582ba8bea00dcb07ad976a07fcbda4dd72cb
-SHA256: 26f12c9b5797b21d85c708588bec823156d02f29f3ce9713e0defb73c3f27f33
+MD5sum: fdea6087940469fc6d258c6b6e0cfd03
+SHA1: 32bf9d9c90a06d787aeae725a0424ddf2c6f4784
+SHA256: 844996a00002764ea02a63e6ae1dc1073e63cf91179e4ec42b1ea3b5c5d761a1
+
+Package: setup
+Version: 1.1.0
+Architecture: all
+Maintainer: Nandu <nandu@nandu-repo>
+Installed-Size: 7000
+Depends: proot-distro, tar, curl, wget, dpkg
+Section: misc
+Priority: optional
+Homepage: https://github.com/bauaasoni37-cpu/Nandu-repo
+Description: Nandu one-shot dev environment: proot-distro Ubuntu with Android SDK, NDK, Flutter and build tools.
+Filename: ./setup_1.1.0_all.deb
+Size: 1803104
+MD5sum: 4eb2e46045fc78986a72b3a16141eb01
+SHA1: 35c6c4fea0ce28c94beb8cd6dfe78bc6778cf9e8
+SHA256: f6dd60f6d28f1dae7c76fa48af26b6f449a0caf46a9ba1ccfa153a9424d64877
 

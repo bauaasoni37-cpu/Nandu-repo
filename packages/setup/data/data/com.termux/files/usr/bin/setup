@@ -1,0 +1,117 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ==============================================================================
+# setup — Nandu One-Shot Dev Environment (Termux side)
+# Installs proot-distro, creates Ubuntu container, restores exact dev env and
+# downloads Android SDK + Flutter from GitHub Releases automatically.
+# Idempotent: re-running skips everything already present.
+# ==============================================================================
+
+set -e
+
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+RESET='\033[0m'
+
+SHARE="$PREFIX/share/nandu-repo"
+REPO_OWNER="bauaasoni37-cpu"
+REPO_NAME="Nandu-repo"
+RELEASE_TAG="sdk-v1.0.0"
+RELEASE_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${RELEASE_TAG}"
+CACHE="${HOME}/.nandu-sdk-cache"
+
+echo -e "${CYAN}==========================================================${RESET}"
+echo -e "${CYAN}   Nandu Zero-Config Build Environment (nandu-repo)${RESET}"
+echo -e "${CYAN}==========================================================${RESET}"
+
+mkdir -p "$CACHE"
+
+# ---------- 1. proot-distro + tooling --------------------------------------
+echo -e "${CYAN}[1/5] Ensuring proot-distro ...${RESET}"
+if ! command -v proot-distro >/dev/null 2>&1; then
+    pkg install -y proot-distro tar curl wget
+fi
+
+# ---------- 2. Ubuntu container --------------------------------------------
+echo -e "${CYAN}[2/5] Ensuring Ubuntu container ...${RESET}"
+if proot-distro list 2>&1 | grep -q "ubuntu"; then
+    echo -e "${GREEN}    ✓ Ubuntu already installed. Skipping.${RESET}"
+else
+    echo -e "${YELLOW}    Installing Ubuntu (proot-distro install ubuntu)...${RESET}"
+    proot-distro install ubuntu
+fi
+
+# ---------- 3. Android SDK & Flutter from GitHub Releases ------------------
+# Parallel download (resume + integrity check), then extract into /opt.
+echo -e "${CYAN}[3/5] Downloading Android SDK & Flutter from GitHub Releases ...${RESET}"
+
+sdk_missing() { proot-distro login ubuntu -- bash -c "[ -d '$1' ]" 2>/dev/null || return 0; return 1; }
+
+download() {
+    local url="$1"
+    local f="$2"
+    local base
+    base=$(basename "$url")
+    if [ -f "$f" ] && gzip -t "$f" 2>/dev/null; then
+        echo -e "${GREEN}    ✓ $base already downloaded. Skipping download.${RESET}"
+        return 0
+    fi
+    rm -f "$f"
+    echo -e "${YELLOW}    Downloading $base ...${RESET}"
+    curl -fL -C - --retry 5 --retry-delay 3 -o "$f" "$url"
+    if ! gzip -t "$f" 2>/dev/null; then
+        echo -e "${RED}    Download corrupted. Retrying from scratch ...${RESET}"
+        rm -f "$f"
+        curl -fL --retry 5 --retry-delay 3 -o "$f" "$url"
+    fi
+    gzip -t "$f" 2>/dev/null && echo -e "${GREEN}    ✓ $base downloaded OK.${RESET}" \
+        || { rm -f "$f"; echo -e "${RED}    ✗ $base download failed. Re-run 'setup' to retry.${RESET}"; return 1; }
+}
+
+if sdk_missing /opt/android-sdk; then
+    download "$RELEASE_URL/android-sdk.tar.gz" "$CACHE/android-sdk.tar.gz" &
+fi
+if sdk_missing /opt/flutter; then
+    download "$RELEASE_URL/flutter-sdk.tar.gz" "$CACHE/flutter-sdk.tar.gz" &
+fi
+wait
+
+for sdk in "/opt/android-sdk:$CACHE/android-sdk.tar.gz" "/opt/flutter:$CACHE/flutter-sdk.tar.gz"; do
+    sdk_path="${sdk%%:*}"
+    cache_file="${sdk##*:}"
+    if sdk_missing "$sdk_path"; then
+        if [ -f "$cache_file" ] && gzip -t "$cache_file" 2>/dev/null; then
+            :
+        else
+            echo -e "${RED}    ✗ $(basename "$cache_file") download failed/corrupt. Re-run 'setup' to retry.${RESET}"
+            exit 1
+        fi
+    fi
+done
+
+if sdk_missing /opt/android-sdk; then
+    echo -e "${YELLOW}    Extracting Android SDK into /opt ...${RESET}"
+    proot-distro login ubuntu -- bash -c "mkdir -p /opt && tar -xzf '$CACHE/android-sdk.tar.gz' -C /opt"
+    echo -e "${GREEN}    ✓ Android SDK installed.${RESET}"
+fi
+if sdk_missing /opt/flutter; then
+    echo -e "${YELLOW}    Extracting Flutter into /opt ...${RESET}"
+    proot-distro login ubuntu -- bash -c "mkdir -p /opt && tar -xzf '$CACHE/flutter-sdk.tar.gz' -C /opt"
+    echo -e "${GREEN}    ✓ Flutter installed.${RESET}"
+fi
+
+# ---------- 4. Restore exact Ubuntu packages + configs ---------------------
+echo -e "${CYAN}[4/5] Restoring Ubuntu dev packages & configs ...${RESET}"
+proot-distro login ubuntu -- bash -c "bash '$SHARE/restore.sh' '$SHARE'"
+
+# ---------- 5. Termux-side commands ----------------------------------------
+echo -e "${CYAN}[5/5] Installing pbuild / build_project commands ...${RESET}"
+cp -f "$SHARE/pbuild" "$PREFIX/bin/pbuild"
+chmod +x "$PREFIX/bin/pbuild"
+ln -sf "$PREFIX/bin/pbuild" "$PREFIX/bin/build_project"
+
+echo -e "${GREEN}==========================================================${RESET}"
+echo -e "${GREEN}   Environment ready! Run 'pbuild' in any project dir.${RESET}"
+echo -e "${GREEN}   Login manually with: proot-distro login ubuntu${RESET}"
+echo -e "${GREEN}==========================================================${RESET}"

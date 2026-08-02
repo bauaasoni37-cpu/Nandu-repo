@@ -1,8 +1,26 @@
-# Nandu Personal Termux Repo (nandu-repo)
+# Nandu Personal Termux Repo (Nandu-repo)
 
 Nandu ka personal Termux APT repository. Is repo se `pkg install` kar ke packages install kar sakte ho.
 
-## Quick install (after pushing to GitHub)
+## One-shot dev environment
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bauaasoni37-cpu/Nandu-repo/main/add-repo.sh | bash
+pkg install setup
+```
+
+`pkg install setup` automatically:
+1. Installs `proot-distro` (agar missing hai)
+2. Creates Ubuntu container (`proot-distro install ubuntu`)
+3. Restores the **exact 166 Ubuntu dev packages** (Java 8/11/17/21/25, build-essential, cmake, ninja, git, nodejs, qemu-user, aapt, ...)
+4. Downloads **Android SDK + NDK** and **Flutter** from GitHub Releases (parallel + resume support)
+5. Applies all configs automatically: `dev_env.sh`, `~/.gradle/gradle.properties`, AAPT2 QEMU wrapper, NDK clang links, `setup`/`pbuild`/`build_project` commands
+
+**Koi manual license accept nahi karna padta, koi manual setup nahi.** Re-run `setup` kabhi bhi — already existing sab skip ho jayega (instant).
+
+> Timing: pehli baar me ~2GB SDK download + extract hoga (network pe depend). Android SDK ~940MB, Flutter ~1.1GB. Re-runs instant.
+
+## Quick install (demo package)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/bauaasoni37-cpu/Nandu-repo/main/add-repo.sh | bash
@@ -10,11 +28,48 @@ pkg install nandu-welcome
 nandu-welcome
 ```
 
-## Demo package
+## Packages
 
-| Package        | Description                              |
-|----------------|------------------------------------------|
-| `nandu-welcome` | Welcome demo package (prints message)     |
+| Package        | Description                                       |
+|----------------|---------------------------------------------------|
+| `setup`        | One-shot full dev environment (proot Ubuntu + SDKs + build tools) |
+| `nandu-welcome`| Welcome demo package (prints message)              |
+
+## SDK Release Assets
+
+SDKs GitHub Releases se download hote hain:
+`https://github.com/bauaasoni37-cpu/Nandu-repo/releases/download/sdk-v1.0.0/`
+
+- `android-sdk.tar.gz` (~940 MB) → `/opt/android-sdk`
+- `flutter-sdk.tar.gz` (~1.1 GB) → `/opt/flutter`
+
+## Repo structure
+
+```
+Nandu-repo/
+├── add-repo.sh                    # Termux me repo add karne wali script
+├── build-repo.sh                  # Packages build + index regenerate script
+├── packages/
+│   ├── setup/                     # One-shot dev env package (source)
+│   │   ├── DEBIAN/control
+│   │   ├── DEBIAN/postinst        # pkg install pe setup auto-run
+│   │   └── data/data/com.termux/files/usr/
+│   │       ├── bin/{setup,pbuild,build_project}
+│   │       └── share/nandu-repo/  # restore.sh, package list, dev_env.sh, aapt2.real
+│   └── nandu-welcome/             # Demo package (source)
+├── debs/                          # Built .deb archives
+└── repo/                          # Ye folder GitHub pe push hota hai
+    ├── Packages / Packages.gz / Release
+    ├── setup_1.1.0_all.deb
+    └── nandu-welcome_1.0.0_all.deb
+```
+
+## Naya package add karna
+
+1. Naya folder banao: `packages/<package-name>/DEBIAN/control`
+2. Files rakho `data/data/com.termux/files/usr/...` ke andar (Termux prefix!)
+3. `bash build-repo.sh` chalao
+4. `repo/` folder ko GitHub pe push karo
 
 ## Repo structure
 

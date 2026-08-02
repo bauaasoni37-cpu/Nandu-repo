@@ -1,0 +1,12 @@
+Package: setup
+Version: 1.1.0
+Architecture: all
+Maintainer: Nandu <nandu@nandu-repo>
+Installed-Size: 7000
+Depends: proot-distro, tar, curl, wget, dpkg
+Section: misc
+Priority: optional
+Homepage: https://github.com/bauaasoni37-cpu/Nandu-repo
+Description: Nandu one-shot dev environment: proot-distro Ubuntu with Android SDK, NDK, Flutter and build tools.
+ Installs proot-distro, creates Ubuntu container, restores exact dev environment and
+ downloads Android SDK & Flutter from GitHub Releases automatically.

@@ -1,0 +1,9 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# postinst: runs full environment setup automatically on 'pkg install setup'
+echo ""
+echo "   =========================================================="
+echo "      Nandu setup package installed."
+echo "      Starting environment setup (proot Ubuntu + SDKs) ..."
+echo "   =========================================================="
+echo ""
+setup
