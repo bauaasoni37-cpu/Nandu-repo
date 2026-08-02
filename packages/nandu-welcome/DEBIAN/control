@@ -5,6 +5,6 @@ Maintainer: Nandu <nandu@nandu-repo>
 Installed-Size: 4
 Section: misc
 Priority: optional
-Homepage: https://github.com/bauaasoni37-cpu/nandu-repo
+Homepage: https://github.com/bauaasoni37-cpu/Nandu-repo
 Description: Nandu personal repo welcome demo package.
  Prints a personal welcome message when 'nandu-welcome' is run.

@@ -5,7 +5,7 @@ Nandu ka personal Termux APT repository. Is repo se `pkg install` kar ke package
 ## Quick install (after pushing to GitHub)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bauaasoni37-cpu/nandu-repo/main/add-repo.sh | bash
+curl -fsSL https://raw.githubusercontent.com/bauaasoni37-cpu/Nandu-repo/main/add-repo.sh | bash
 pkg install nandu-welcome
 nandu-welcome
 ```

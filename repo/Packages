@@ -5,11 +5,11 @@ Maintainer: Nandu <nandu@nandu-repo>
 Installed-Size: 4
 Section: misc
 Priority: optional
-Homepage: https://github.com/bauaasoni37-cpu/nandu-repo
+Homepage: https://github.com/bauaasoni37-cpu/Nandu-repo
 Description: Nandu personal repo welcome demo package.
 Filename: ./nandu-welcome_1.0.0_all.deb
 Size: 1120
-MD5sum: 630c5336f83e7ec57b1937235ee0025f
-SHA1: 4986b841ce98e636102c3b7469643b77120d83f6
-SHA256: 5e59b8301fcb7401b0c085f3acda6c2dcc3603d139998aa17e4c8db41f68787a
+MD5sum: 01b7869818d0fcd1bf34ad2b88b3f3a4
+SHA1: d4f4582ba8bea00dcb07ad976a07fcbda4dd72cb
+SHA256: 26f12c9b5797b21d85c708588bec823156d02f29f3ce9713e0defb73c3f27f33
 

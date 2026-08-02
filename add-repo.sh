@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ==============================================================================
 # Script: add-repo.sh — Add Nandu's Personal Termux Repo
-# Usage : curl -fsSL https://raw.githubusercontent.com/bauaasoni37-cpu/nandu-repo/main/add-repo.sh | bash
+# Usage : curl -fsSL https://raw.githubusercontent.com/bauaasoni37-cpu/Nandu-repo/main/add-repo.sh | bash
 # ==============================================================================
 
 set -e
@@ -14,7 +14,7 @@ echo -e "${CYAN}==> Adding nandu-repo to Termux APT sources...${RESET}"
 
 mkdir -p "$PREFIX/etc/apt/sources.list.d"
 cat << 'EOF' > "$PREFIX/etc/apt/sources.list.d/nandu-repo.list"
-deb [trusted=yes] https://raw.githubusercontent.com/bauaasoni37-cpu/nandu-repo/main/repo ./
+deb [trusted=yes] https://raw.githubusercontent.com/bauaasoni37-cpu/Nandu-repo/main/repo ./
 EOF
 
 echo -e "${CYAN}==> Updating package lists...${RESET}"
