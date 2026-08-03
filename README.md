@@ -6,7 +6,9 @@ Nandu ka personal Termux APT repository. Is repo se `pkg install` kar ke package
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/bauaasoni37-cpu/Nandu-repo/main/add-repo.sh | bash
-pkg install setup
+```
+```bash
+pkg install setup -y
 ```
 
 `pkg install setup` automatically:
