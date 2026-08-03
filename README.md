@@ -14,13 +14,12 @@ pkg install setup -y
 `pkg install setup` automatically:
 1. Installs `proot-distro` (agar missing hai)
 2. Creates Ubuntu container (`proot-distro install ubuntu`)
-3. Restores the **exact 166 Ubuntu dev packages** (Java 8/11/17/21/25, build-essential, cmake, ninja, git, nodejs, qemu-user, aapt, ...)
-4. Downloads **Android SDK + NDK** and **Flutter** from GitHub Releases (parallel + resume support)
-5. Applies all configs automatically: `dev_env.sh`, `~/.gradle/gradle.properties`, AAPT2 QEMU wrapper, NDK clang links, `setup`/`pbuild`/`build_project` commands
+3. Downloads **Android SDK + NDK** and **Flutter** from GitHub Releases (parallel + resume support) while **simultaneously** installing the ~45 Ubuntu dev packages (Java 17, build-essential, cmake, ninja, git, nodejs, qemu-user, pigz, ...)
+4. Applies all configs automatically: `dev_env.sh`, `~/.gradle/gradle.properties`, AAPT2 QEMU wrapper, NDK clang links, `setup`/`pbuild`/`build_project` commands
 
 **Koi manual license accept nahi karna padta, koi manual setup nahi.** Re-run `setup` kabhi bhi — already existing sab skip ho jayega (instant).
 
-> Timing: pehli baar me ~2GB SDK download + extract hoga (network pe depend). Android SDK ~940MB, Flutter ~1.1GB. Re-runs instant.
+> Timing: pehli baar me ~2GB SDK download + extract hoga (network pe depend). Android SDK ~940MB, Flutter ~1.1GB — dono ek saath download hote hain. Re-runs instant.
 
 ## Quick install (demo package)
 
@@ -62,7 +61,7 @@ Nandu-repo/
 ├── debs/                          # Built .deb archives
 └── repo/                          # Ye folder GitHub pe push hota hai
     ├── Packages / Packages.gz / Release
-    ├── setup_1.1.1_all.deb
+    ├── setup_1.2.1_all.deb
     └── nandu-welcome_1.0.0_all.deb
 ```
 

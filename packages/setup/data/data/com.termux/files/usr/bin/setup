@@ -3,7 +3,11 @@
 # setup — Nandu One-Shot Dev Environment (Termux side)
 # Installs proot-distro, creates Ubuntu container, restores exact dev env and
 # downloads Android SDK + Flutter from GitHub Releases automatically.
-# Idempotent: re-running skips everything already present.
+#
+# Optimizations:
+#  - SDK downloads run IN PARALLEL with the Ubuntu package install
+#  - Extraction uses pigz (parallel gunzip) when available
+#  - Idempotent: a /etc/nandu-dev-ready marker makes re-runs instant
 # ==============================================================================
 
 set -e
@@ -20,6 +24,7 @@ REPO_NAME="Nandu-repo"
 RELEASE_TAG="sdk-v1.0.0"
 RELEASE_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${RELEASE_TAG}"
 CACHE="${HOME}/.nandu-sdk-cache"
+RESTORE_LOG="$CACHE/restore.log"
 
 echo -e "${CYAN}==========================================================${RESET}"
 echo -e "${CYAN}   Nandu Zero-Config Build Environment (nandu-repo)${RESET}"
@@ -30,16 +35,12 @@ mkdir -p "$CACHE"
 # ---------- 1. proot-distro + tooling --------------------------------------
 echo -e "${CYAN}[1/5] Ensuring proot-distro ...${RESET}"
 if ! command -v proot-distro >/dev/null 2>&1; then
-    pkg install -y proot-distro tar curl wget
+    pkg install -y proot-distro tar curl wget pigz
 fi
 
 # ---------- 2. Ubuntu container --------------------------------------------
 echo -e "${CYAN}[2/5] Ensuring Ubuntu container ...${RESET}"
 
-# Reliable check: proot-distro's data dir (documented location) plus a strict
-# parse of `proot-distro list`. Naively grepping "ubuntu" is wrong — when NO
-# container is installed, the "Install one with: proot-distro install ubuntu"
-# hint also contains "ubuntu", which caused the install to be wrongly skipped.
 ubuntu_installed() {
     [ -d "$PREFIX/var/lib/proot-distro/containers/ubuntu" ] && return 0
     proot-distro list 2>/dev/null | grep -qE '^\s*\*\s+ubuntu(\s|$)' && return 0
@@ -57,11 +58,11 @@ else
     echo -e "${GREEN}    ✓ Ubuntu installed.${RESET}"
 fi
 
-# ---------- 3. Android SDK & Flutter from GitHub Releases ------------------
-# Parallel download (resume + integrity check), then extract into /opt.
-echo -e "${CYAN}[3/5] Downloading Android SDK & Flutter from GitHub Releases ...${RESET}"
+# ---------- 3. SDK download + Ubuntu package install IN PARALLEL ------------
+echo -e "${CYAN}[3/5] Downloading SDKs & installing Ubuntu packages (parallel) ...${RESET}"
 
 sdk_missing() { proot-distro login ubuntu -- bash -c "[ -d '$1' ]" 2>/dev/null || return 0; return 1; }
+dev_ready()   { proot-distro login ubuntu -- bash -c '[ -f /etc/nandu-dev-ready ]' 2>/dev/null; }
 
 download() {
     local url="$1"
@@ -92,41 +93,70 @@ download() {
     fi
 }
 
+# Background: Ubuntu packages install (heavy) runs while SDKs download.
+RESTORE_PID=""
+if dev_ready; then
+    echo -e "${GREEN}    ✓ Dev environment already restored. Skipping package install.${RESET}"
+else
+    proot-distro login ubuntu -- bash -c "bash '$SHARE/restore.sh' '$SHARE' packages" > "$RESTORE_LOG" 2>&1 &
+    RESTORE_PID=$!
+fi
+
+# Background: parallel SDK downloads.
+DL_PIDS=()
 if sdk_missing /opt/android-sdk; then
     download "$RELEASE_URL/android-sdk.tar.gz" "$CACHE/android-sdk.tar.gz" &
+    DL_PIDS+=("$!")
 fi
 if sdk_missing /opt/flutter; then
     download "$RELEASE_URL/flutter-sdk.tar.gz" "$CACHE/flutter-sdk.tar.gz" &
+    DL_PIDS+=("$!")
 fi
-wait
+# Wait only for the downloads; the restore job must NOT be reaped here.
+if [ "${#DL_PIDS[@]}" -gt 0 ]; then
+    wait "${DL_PIDS[@]}"
+fi
 
+# Verify downloads before extracting.
 for sdk in "/opt/android-sdk:$CACHE/android-sdk.tar.gz" "/opt/flutter:$CACHE/flutter-sdk.tar.gz"; do
     sdk_path="${sdk%%:*}"
     cache_file="${sdk##*:}"
-    if sdk_missing "$sdk_path"; then
-        if [ -f "$cache_file" ] && gzip -t "$cache_file" 2>/dev/null; then
-            :
-        else
-            echo -e "${RED}    ✗ $(basename "$cache_file") download failed/corrupt. Re-run 'setup' to retry.${RESET}"
-            exit 1
-        fi
+    if sdk_missing "$sdk_path" && { [ ! -f "$cache_file" ] || ! gzip -t "$cache_file" 2>/dev/null; }; then
+        echo -e "${RED}    ✗ $(basename "$cache_file") download failed/corrupt. Re-run 'setup' to retry.${RESET}"
+        [ -n "$RESTORE_PID" ] && kill "$RESTORE_PID" 2>/dev/null || true
+        exit 1
     fi
 done
 
+TARX=(tar)
+if command -v pigz >/dev/null 2>&1; then
+    TARX=(tar -I pigz)
+fi
+
+# ---------- 4. Extract SDKs + finish Ubuntu config -------------------------
+echo -e "${CYAN}[4/5] Extracting SDKs & finishing Ubuntu config ...${RESET}"
+
 if sdk_missing /opt/android-sdk; then
     echo -e "${YELLOW}    Extracting Android SDK into /opt ...${RESET}"
-    proot-distro login ubuntu -- bash -c "mkdir -p /opt && tar -xzf '$CACHE/android-sdk.tar.gz' -C /opt"
+    proot-distro login ubuntu -- bash -c "mkdir -p /opt && ${TARX[*]} -xzf '$CACHE/android-sdk.tar.gz' -C /opt"
     echo -e "${GREEN}    ✓ Android SDK installed.${RESET}"
 fi
 if sdk_missing /opt/flutter; then
     echo -e "${YELLOW}    Extracting Flutter into /opt ...${RESET}"
-    proot-distro login ubuntu -- bash -c "mkdir -p /opt && tar -xzf '$CACHE/flutter-sdk.tar.gz' -C /opt"
+    proot-distro login ubuntu -- bash -c "mkdir -p /opt && ${TARX[*]} -xzf '$CACHE/flutter-sdk.tar.gz' -C /opt"
     echo -e "${GREEN}    ✓ Flutter installed.${RESET}"
 fi
 
-# ---------- 4. Restore exact Ubuntu packages + configs ---------------------
-echo -e "${CYAN}[4/5] Restoring Ubuntu dev packages & configs ...${RESET}"
-proot-distro login ubuntu -- bash -c "bash '$SHARE/restore.sh' '$SHARE'"
+# Wait for the background package install before applying configs.
+if [ -n "$RESTORE_PID" ]; then
+    echo -e "${YELLOW}    Waiting for Ubuntu package install to finish ...${RESET}"
+    wait "$RESTORE_PID"
+    echo -e "${GREEN}    ✓ Ubuntu packages installed.${RESET}"
+fi
+
+if ! dev_ready; then
+    proot-distro login ubuntu -- bash -c "bash '$SHARE/restore.sh' '$SHARE' configs"
+fi
 
 # ---------- 5. Termux-side commands ----------------------------------------
 echo -e "${CYAN}[5/5] Installing pbuild / build_project commands ...${RESET}"
